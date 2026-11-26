@@ -41,7 +41,7 @@ Tested end to end with real data before going live: 2 releases → 6 changes →
 2. In **Get changelog**, set your own API URL and a *Header Auth* credential with your key. Keys never go inside a node.
 3. In **Send email**, set an SMTP credential and the from/to addresses.
 
-What was removed from this copy: the API host and path, credentials, and every email address. The field names in the expressions match the API response the workflow was built for.
+What was removed from this copy: the API host and path, credentials, and every email address. The field names in the expressions match the API response the workflow was built for. The **Write email** Code node is the exact code running in production.
 
 ## Animation
 
