@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans:wght@500;600&display=swap">
+<style>
+  /* PeekRank: estilo distinto al de Cribot. Oscuro, menta y ámbar, y una "cadena de montaje" de 9 nodos. Render por tiempo (render(t)). */
+  :root { --bg:#0c1820; --bg2:#10252d; --fg:#e8f1f2; --muted:#8fa6ad; --line:#24414a; --menta:#3ddc97; --teal:#2bb3c0; --ambar:#ffb547; --gris:#4d636a; }
+  * { box-sizing: border-box; margin: 0; }
+  html, body { width: 1920px; height: 1080px; overflow: hidden; }
+  body { background: radial-gradient(1100px 700px at 80% -10%, #15343d 0%, transparent 70%), radial-gradient(900px 600px at 0% 110%, #12303a 0%, transparent 70%), var(--bg);
+         color: var(--fg); font-family: "IBM Plex Sans", "Segoe UI", sans-serif; }
+  #rejilla { position: absolute; inset: -60px; background-image: linear-gradient(#ffffff08 1px, transparent 1px), linear-gradient(90deg, #ffffff08 1px, transparent 1px); background-size: 60px 60px; }
+  .capa { position: absolute; inset: 0; opacity: 0; }
+  .eti { font-family: "IBM Plex Mono", monospace; font-size: 28px; letter-spacing: .12em; text-transform: uppercase; color: var(--menta); }
+  .h1 { font-family: "Space Grotesk", sans-serif; font-weight: 700; font-size: 112px; line-height: 1.0; letter-spacing: -.03em; }
+  .h2 { font-family: "Space Grotesk", sans-serif; font-weight: 700; font-size: 74px; line-height: 1.08; letter-spacing: -.02em; }
+  .sub { font-size: 36px; line-height: 1.4; color: var(--muted); }
+  .menta { color: var(--menta); } .ambar { color: var(--ambar); }
+  .nota { font-family: "IBM Plex Mono", monospace; font-size: 24px; color: var(--muted); }
+  /* reloj */
+  #reloj { position: absolute; left: 1400px; top: 280px; width: 400px; height: 400px; }
+  /* tarjetas del problema */
+  .tarj { position: absolute; width: 420px; height: 70px; border-radius: 14px; background: #13303a; border: 2px solid var(--line); display: flex; align-items: center; gap: 16px; padding: 0 22px; font-family: "IBM Plex Mono", monospace; font-size: 24px; color: var(--muted); }
+  .tarj i { width: 14px; height: 14px; border-radius: 50%; background: var(--teal); }
+  /* cadena de nodos */
+  .nodo { position: absolute; width: 124px; height: 124px; border-radius: 26px; background: #112a32; border: 3px solid var(--line); display: grid; place-items: center; }
+  .nodo svg { width: 62px; height: 62px; }
+  .nodo .nom { position: absolute; top: 138px; left: 50%; transform: translateX(-50%); font-family: "IBM Plex Mono", monospace; font-size: 22px; color: var(--muted); white-space: nowrap; }
+  .cuenta { position: absolute; font-family: "IBM Plex Mono", monospace; font-size: 20px; color: var(--menta); white-space: nowrap; transform: translateX(-50%); }
+  .dato { position: absolute; width: 150px; height: 30px; border-radius: 8px; background: #143c3a; border: 2px solid var(--menta); font-family: "IBM Plex Mono", monospace; font-size: 16px; color: var(--menta); display: flex; align-items: center; justify-content: center; }
+  .dato.int { background: #2a2f33; border-color: var(--gris); color: #9aa7ab; }
+  #pie { position: absolute; left: 0; right: 0; top: 820px; text-align: center; }
+  #pieN { font-family: "IBM Plex Mono", monospace; font-size: 26px; color: var(--menta); letter-spacing: .1em; }
+  #pieT { font-family: "Space Grotesk", sans-serif; font-weight: 600; font-size: 52px; margin-top: 10px; }
+  /* captura real */
+  #captura { position: absolute; left: 140px; top: 330px; width: 1640px; height: 240px; border-radius: 22px; overflow: hidden; border: 2px solid var(--line); box-shadow: 0 40px 80px -40px #000; background: #f7f7f7; }
+  #captura img { position: absolute; left: -137px; top: -257px; width: 1835px; }
+  .stat { position: absolute; top: 650px; width: 340px; text-align: center; }
+  .stat b { display: block; font-family: "Space Grotesk", sans-serif; font-weight: 700; font-size: 96px; line-height: 1; }
+  .stat span { font-family: "IBM Plex Mono", monospace; font-size: 26px; color: var(--muted); }
+  .chip { position: absolute; display: flex; align-items: center; gap: 22px; padding: 26px 34px; border-radius: 20px; background: #112a32; border: 2px solid var(--line); font-size: 38px; font-weight: 600; width: 1620px; white-space: nowrap; }
+  .chip i { font-style: normal; font-family: "IBM Plex Mono", monospace; font-size: 30px; color: var(--menta); width: 60px; }
+  .chip span { color: var(--muted); font-weight: 500; font-size: 30px; }
+  #barra { position: absolute; left: 0; bottom: 0; height: 6px; background: linear-gradient(90deg, var(--teal), var(--menta)); }
+</style>
+</head>
+<body>
+<div id="rejilla"></div>
+
+<!-- S1 título + reloj -->
+<div class="capa" id="c1">
+  <div id="s1e" class="eti" style="position:absolute; left:150px; top:280px">n8n workflow · PeekRank</div>
+  <div class="h1" style="position:absolute; left:150px; top:330px; width:1250px; font-size:96px"><span id="s1a" style="display:inline-block">Weekly product updates,</span><br><span id="s1b" class="menta" style="display:inline-block">sent by themselves.</span></div>
+  <div id="s1s" class="sub" style="position:absolute; left:150px; top:560px; width:1050px">The PeekRank app is built by its team. <span style="color:var(--fg)">I built the automation that turns its changelog into a weekly email.</span></div>
+  <svg id="reloj" viewBox="0 0 220 220">
+    <circle cx="110" cy="110" r="96" fill="#112a32" stroke="#24414a" stroke-width="8"/>
+    <g id="marcas"></g>
+    <line id="hora" x1="110" y1="110" x2="110" y2="60" stroke="#e8f1f2" stroke-width="9" stroke-linecap="round"/>
+    <line id="min" x1="110" y1="110" x2="110" y2="34" stroke="#3ddc97" stroke-width="6" stroke-linecap="round"/>
+    <circle cx="110" cy="110" r="8" fill="#3ddc97"/>
+    <text id="dia" x="110" y="160" text-anchor="middle" font-family="IBM Plex Mono" font-size="18" fill="#8fa6ad">WED</text>
+  </svg>
+</div>
+
+<!-- S2 el problema -->
+<div class="capa" id="c2">
+  <div id="s2e" class="eti" style="position:absolute; left:150px; top:250px">Before</div>
+  <div id="s2t" class="h2" style="position:absolute; left:150px; top:310px; width:900px">Every week, someone had to read every change, <span class="ambar">drop the internal ones</span> and write a summary.</div>
+  <div id="p1" class="tarj" style="left:1250px; top:260px"><i></i>v1.7.1 · new feature</div>
+  <div id="p2" class="tarj" style="left:1250px; top:350px"><i style="background:var(--gris)"></i>internal refactor</div>
+  <div id="p3" class="tarj" style="left:1250px; top:440px"><i></i>bug fix · keywords</div>
+  <div id="p4" class="tarj" style="left:1250px; top:530px"><i style="background:var(--gris)"></i>internal tooling</div>
+  <div id="p5" class="tarj" style="left:1250px; top:620px"><i></i>v1.7.0 · new countries</div>
+  <div id="p6" class="tarj" style="left:1250px; top:710px"><i></i>improvement · prompts</div>
+</div>
+
+<!-- S3 la cadena -->
+<div class="capa" id="c3">
+  <div id="s3e" class="eti" style="position:absolute; left:150px; top:120px">How the workflow runs</div>
+  <div id="s3t" class="h2" style="position:absolute; left:150px; top:170px; font-size:64px">9 nodes, <span class="menta">one email</span></div>
+  <svg id="hilo" style="position:absolute; left:0; top:0" width="1920" height="1080"><path id="hiloP" d="" stroke="#24414a" stroke-width="5" fill="none"/></svg>
+  <div id="nodos"></div>
+  <div id="cuentas"></div>
+  <div id="datos"></div>
+  <div id="pulso" style="position:absolute; width:22px; height:22px; border-radius:50%; background:var(--menta); box-shadow:0 0 0 10px #3ddc9733, 0 0 30px #3ddc97; opacity:0"></div>
+  <div id="pie"><div id="pieN"></div><div id="pieT"></div></div>
+</div>
+
+<!-- S4 la prueba real -->
+<div class="capa" id="c4">
+  <div id="s4e" class="eti" style="position:absolute; left:150px; top:130px">Tested end to end with real data</div>
+  <div id="s4t" class="h2" style="position:absolute; left:150px; top:180px; font-size:64px">The real workflow in n8n</div>
+  <div id="captura"><img src="flujo.jpg"><div id="tapa" style="position:absolute; left:1460px; top:121px; width:160px; height:24px; background:#f7f7f7; display:flex; justify-content:center; font:600 17px 'IBM Plex Sans',sans-serif; color:#333">Send email</div></div>
+  <div id="st1" class="stat" style="left:140px"><b>2</b><span>releases</span></div>
+  <div id="st2" class="stat" style="left:540px"><b>6</b><span>changes</span></div>
+  <div id="st3" class="stat" style="left:940px"><b class="menta">4</b><span>public</span></div>
+  <div id="st4" class="stat" style="left:1340px"><b class="ambar">1</b><span>email</span></div>
+</div>
+
+<!-- S5 detalles -->
+<div class="capa" id="c5">
+  <div id="s5e" class="eti" style="position:absolute; left:150px; top:170px">The details that matter</div>
+  <div id="k1" class="chip" style="left:150px; top:250px"><i>01</i>Exact dates <span>Monday to Sunday, Madrid time: nothing lost, nothing repeated</span></div>
+  <div id="k2" class="chip" style="left:150px; top:400px"><i>02</i>No empty emails <span>if there are no public changes, it stops</span></div>
+  <div id="k3" class="chip" style="left:150px; top:550px"><i>03</i>Safe key <span>stored in an n8n credential, never in a node</span></div>
+  <div id="k4" class="chip" style="left:150px; top:700px"><i>04</i>Retries <span>the API call is retried up to 3 times</span></div>
+</div>
+
+<!-- S6 cierre -->
+<div class="capa" id="c6">
+  <div id="s6a" class="h1" style="position:absolute; left:150px; top:330px">Paula López</div>
+  <div id="s6b" class="h2 menta" style="position:absolute; left:150px; top:470px; font-size:60px">AI automation · n8n · APIs</div>
+  <div id="s6c" class="sub" style="position:absolute; left:150px; top:580px">Built in n8n with AI assistance, from the PeekRank team's spec.</div>
+  <div id="s6d" style="position:absolute; left:150px; top:690px; font-family:'IBM Plex Mono',monospace; font-size:38px; color:var(--fg); background:#112a32; border:2px solid var(--menta); border-radius:16px; padding:18px 30px">paula-lopez.vercel.app</div>
+</div>
+
+<div id="barra"></div>
+<script>
+const $ = id => document.getElementById(id);
+const clamp = (x, a=0, b=1) => Math.max(a, Math.min(b, x));
+const ease = x => 1 - Math.pow(1 - clamp(x), 3);
+const easeIO = x => { x = clamp(x); return x < .5 ? 4*x*x*x : 1 - Math.pow(-2*x + 2, 3) / 2; };
+const back = x => { x = clamp(x); const c = 1.8; return 1 + (c+1)*Math.pow(x-1,3) + c*Math.pow(x-1,2); };
+const lerp = (a, b, x) => a + (b - a) * x;
+function entra(el, t, t0, d=.45, dx=0, dy=40) { if (typeof el === 'string') el = $(el); const k = ease((t - t0) / d);
+  el.style.opacity = clamp((t - t0) / (d*.7)); el.style.transform = `translate(${(1-k)*dx}px, ${(1-k)*dy}px)`; }
+function pop(el, t, t0, d=.45) { if (typeof el === 'string') el = $(el); const k = back((t - t0) / d);
+  el.style.opacity = clamp((t - t0) / (d*.5)); el.style.transform = `scale(${lerp(.3, 1, k)})`; }
+
+const S = { c1:[0,4.2], c2:[4.2,8.6], c3:[8.6,21.4], c4:[21.4,26.4], c5:[26.4,30.8], c6:[30.8,35] };
+const FUNDE = .35;
+
+// --- iconos ---
+const IC = {
+  reloj: '<circle cx="31" cy="31" r="22" fill="none" stroke="#e8f1f2" stroke-width="4"/><path d="M31 18v14l9 6" stroke="#3ddc97" stroke-width="4" fill="none" stroke-linecap="round"/>',
+  globo: '<circle cx="31" cy="31" r="22" fill="none" stroke="#e8f1f2" stroke-width="4"/><ellipse cx="31" cy="31" rx="10" ry="22" fill="none" stroke="#2bb3c0" stroke-width="3.5"/><path d="M9 31h44" stroke="#2bb3c0" stroke-width="3.5"/>',
+  si: '<path d="M12 31h14M26 31l16-14M26 31l16 14" stroke="#e8f1f2" stroke-width="4" fill="none" stroke-linecap="round"/><circle cx="46" cy="17" r="5" fill="#3ddc97"/><circle cx="46" cy="45" r="5" fill="#4d636a"/>',
+  separa: '<path d="M12 31h12M24 31l18-14M24 31h20M24 31l18 14" stroke="#e8f1f2" stroke-width="4" fill="none" stroke-linecap="round"/><circle cx="12" cy="31" r="5" fill="#2bb3c0"/>',
+  filtro: '<path d="M12 16h38L35 34v14l-8-4V34z" fill="none" stroke="#e8f1f2" stroke-width="4" stroke-linejoin="round"/>',
+  junta: '<path d="M14 17l18 14M14 31h20M14 45l18-14M34 31h14" stroke="#e8f1f2" stroke-width="4" fill="none" stroke-linecap="round"/><circle cx="48" cy="31" r="5" fill="#2bb3c0"/>',
+  codigo: '<text x="31" y="41" text-anchor="middle" font-family="IBM Plex Mono" font-size="30" font-weight="600" fill="#ffb547">{ }</text>',
+  correo: '<rect x="10" y="16" width="42" height="30" rx="5" fill="none" stroke="#e8f1f2" stroke-width="4"/><path d="M12 19l19 14 19-14" stroke="#3ddc97" stroke-width="4" fill="none" stroke-linejoin="round"/>'
+};
+const N = [
+  ['reloj','Schedule','Wakes up every Wednesday at 8:00'],
+  ['globo','HTTP','Asks the PeekRank API for last week’s changes'],
+  ['si','If','Any public changes? If not, it stops: no empty emails'],
+  ['separa','Split Out','Splits the list into releases…'],
+  ['separa','Split Out','…and each release into single changes'],
+  ['filtro','Filter','Keeps only the changes marked public'],
+  ['junta','Aggregate','Gathers them back into one list'],
+  ['codigo','Code','Writes the subject and the email body'],
+  ['correo','Send email','Sends the weekly summary']
+];
+const CNT = ['1 run','1 response','true','2 releases','6 changes','4 public','1 list','1 email'];
+const X0 = 110, PASO = 205, YN = 470;   // esquina de cada nodo
+const cx = i => X0 + i * PASO + 62, cy = YN + 62;
+let html = '';
+N.forEach(([ic, nom], i) => { html += `<div class="nodo" id="nd${i}" style="left:${X0 + i*PASO}px; top:${YN}px"><svg viewBox="0 0 62 62">${IC[ic]}</svg><div class="nom">${nom}</div></div>`; });
+$('nodos').innerHTML = html;
+html = ''; CNT.forEach((c, i) => { html += `<div class="cuenta" id="ct${i}" style="left:${(cx(i)+cx(i+1))/2}px; top:${cy + (i % 2 ? 34 : -58)}px">${c}</div>`; });
+$('cuentas').innerHTML = html;
+$('hiloP').setAttribute('d', `M${cx(0)} ${cy} L ${cx(8)} ${cy}`);
+const LARGO = cx(8) - cx(0); $('hiloP').setAttribute('stroke-dasharray', LARGO);
+// 6 cambios: 2 internos
+const D = [['feature',0],['internal',1],['bug fix',0],['internal',1],['countries',0],['prompts',0]];
+html = ''; D.forEach(([txt, int], k) => { html += `<div class="dato${int ? ' int' : ''}" id="dt${k}">${txt}</div>`; });
+$('datos').innerHTML = html;
+// marcas del reloj
+let m = ''; for (let k = 0; k < 12; k++) { const a = k * Math.PI / 6; m += `<line x1="${110 + 80*Math.sin(a)}" y1="${110 - 80*Math.cos(a)}" x2="${110 + 90*Math.sin(a)}" y2="${110 - 90*Math.cos(a)}" stroke="#24414a" stroke-width="5" stroke-linecap="round"/>`; }
+$('marcas').innerHTML = m;
+
+function render(t) {
+  const total = S.c6[1];
+  $('rejilla').style.transform = `translate(${-(t*8)%60}px, 0)`;
+  $('barra').style.width = (t / total * 1920) + 'px';
+  for (const [c, [a, b]] of Object.entries(S)) {
+    let op = clamp((t - a) / FUNDE) * clamp((b - t) / FUNDE);
+    if (c === 'c1' && t < a + FUNDE) op = 1; if (c === 'c6' && t > b - FUNDE) op = 1;
+    $(c).style.opacity = op;
+  }
+  // S1: reloj que avanza hasta las 8:00 y titulares
+  entra('s1e', t, .2, .4, -60, 0); entra('s1a', t, .35, .45, 0, 70); entra('s1b', t, .6, .45, 0, 70); entra('s1s', t, 1.3, .45, 0, 30);
+  pop('reloj', t, .3, .6);
+  const g = easeIO((t - .6) / 2.0);                  // de 7:00 a 8:00
+  const minutos = 60 * g, horas = 7 + g;
+  $('min').setAttribute('transform', `rotate(${minutos * 6} 110 110)`);
+  $('hora').setAttribute('transform', `rotate(${horas * 30} 110 110)`);
+  $('dia').textContent = g >= 1 ? 'WED 8:00' : 'WED';
+  // S2
+  const b2 = S.c2[0]; entra('s2e', t, b2+.1, .4, -60, 0); entra('s2t', t, b2+.25, .5, -80, 0);
+  for (let k = 1; k <= 6; k++) { entra('p'+k, t, b2 + .5 + k*.18, .35, 120, 0);
+    const el = $('p'+k); if ([2,4].includes(k) && t > b2 + 2.6) { const q = ease((t - b2 - 2.6) / .5); el.style.opacity = 1 - .6*q; el.style.transform = `translate(${q*40}px, 0) rotate(${q*4}deg)`; } }
+  // S3: cadena
+  const b3 = S.c3[0];
+  entra('s3e', t, b3+.1, .4, -60, 0); entra('s3t', t, b3+.2, .45, -60, 0);
+  $('hiloP').setAttribute('stroke-dashoffset', LARGO * (1 - easeIO((t - b3 - .3) / 1.2)));
+  N.forEach((_, i) => pop('nd'+i, t, b3 + .3 + i * .12, .4));
+  const T = i => b3 + 2.2 + i * 1.12;                // llegada del pulso a cada nodo
+  let activo = -1;
+  N.forEach((_, i) => { const nd = $('nd'+i); const on = t >= T(i) && t < T(i) + 1.12; const pas = t >= T(i);
+    nd.style.borderColor = on ? '#3ddc97' : (pas ? '#2b6b5a' : '#24414a');
+    nd.style.boxShadow = on ? '0 0 0 8px #3ddc9722, 0 0 40px #3ddc9755' : 'none';
+    if (on) activo = i; });
+  if (t >= T(8) + 1.12) activo = 8;
+  // pulso entre nodos
+  const pu = $('pulso'); let px = null;
+  for (let i = 1; i <= 8; i++) { if (t >= T(i) - .7 && t < T(i)) { px = lerp(cx(i-1), cx(i), easeIO((t - (T(i) - .7)) / .7)); } }
+  pu.style.opacity = px === null ? 0 : 1; if (px !== null) { pu.style.left = (px - 11) + 'px'; pu.style.top = (cy - 11) + 'px'; }
+  // cuentas sobre las conexiones
+  CNT.forEach((_, i) => entra('ct'+i, t, T(i+1) - .2, .35, 0, 12));
+  // pie con la explicación del nodo activo
+  if (activo >= 0) { $('pieN').textContent = `STEP ${activo + 1} / 9 · ${N[activo][1].toUpperCase()}`; $('pieT').textContent = N[activo][2];
+    const k = ease((t - T(activo)) / .35); $('pie').style.opacity = clamp((t - T(activo)) / .25); $('pie').style.transform = `translateY(${(1-k)*20}px)`; }
+  else { $('pie').style.opacity = 0; }
+  // los 6 cambios viajan: aparecen en el nodo 5 (índice 4), los internos caen en el filtro, se juntan y salen como correo
+  D.forEach(([_, int], k) => {
+    const el = $('dt'+k); let x = cx(4), y = 250 + k * 34, op = 0, rot = 0, sc = 1;
+    if (t >= T(4)) {
+      op = clamp((t - T(4)) / .3);
+      const k1 = easeIO((t - T(4) - .4) / .6); x = lerp(cx(4), cx(5), k1);                    // al filtro
+      if (int) { const q = clamp((t - T(5) - .3) / .7); y += q * q * 380; rot = q * 25; op *= 1 - q; }
+      else {
+        const k2 = easeIO((t - T(5) - .5) / .6); x = lerp(x, cx(6), k2);                   // a juntar
+        const ord = [0, null, 1, null, 2, 3][k]; const yJ = 300 + ord * 34;
+        y = lerp(y, yJ, k2);
+        const k3 = easeIO((t - T(6) - .3) / .5); y = lerp(y, 352, k3); if (k3 > .9 && ord > 0) op *= 1 - clamp((k3 - .9) / .1); // se funden en uno
+        const k4 = easeIO((t - T(7) - .4) / .6); x = lerp(x, cx(7), k4);                     // a redactar
+        const k5 = easeIO((t - T(8) - .4) / .6); x = lerp(x, cx(8), k5);                     // a enviar
+        const k6 = easeIO((t - T(8) - 1.0) / .7); x = lerp(x, 2100, k6);                     // sale volando
+        if (k3 > .95 && ord === 0) { el.textContent = t >= T(7) + .6 ? '✉ email' : 'list ×4'; }
+        else if (ord === 0) el.textContent = 'feature';
+      }
+    }
+    el.style.left = (x - 75) + 'px'; el.style.top = y + 'px'; el.style.opacity = op; el.style.transform = `rotate(${rot}deg) scale(${sc})`;
+  });
+  // S4
+  const b4 = S.c4[0]; entra('s4e', t, b4+.1, .4, -60, 0); entra('s4t', t, b4+.2, .45, -60, 0); entra('captura', t, b4+.3, .6, 0, 60);
+  ['st1','st2','st3','st4'].forEach((s, i) => pop(s, t, b4 + 1.2 + i * .3, .45));
+  // S5
+  const b5 = S.c5[0]; entra('s5e', t, b5+.1, .4, -60, 0); ['k1','k2','k3','k4'].forEach((k, i) => entra(k, t, b5 + .3 + i * .35, .45, -120, 0));
+  // S6
+  const b6 = S.c6[0]; entra('s6a', t, b6+.2, .5, 0, 60); entra('s6b', t, b6+.5, .45, 0, 40); entra('s6c', t, b6+.8, .45, 0, 30); pop('s6d', t, b6+1.1, .5);
+}
+window.render = render;
+render(0);
+</script>
+</body>
+</html>

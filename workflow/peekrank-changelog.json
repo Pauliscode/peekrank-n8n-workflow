@@ -1,0 +1,321 @@
+{
+    "name":  "PeekRank weekly changelog email",
+    "nodes":  [
+                  {
+                      "parameters":  {
+                                         "rule":  {
+                                                      "interval":  [
+                                                                       {
+                                                                           "field":  "weeks",
+                                                                           "triggerAtDay":  [
+                                                                                                3
+                                                                                            ],
+                                                                           "triggerAtHour":  8,
+                                                                           "triggerAtMinute":  0
+                                                                       }
+                                                                   ]
+                                                  }
+                                     },
+                      "id":  "a1f0c001-0001-4000-8000-000000000001",
+                      "name":  "Every Wednesday 08:00",
+                      "type":  "n8n-nodes-base.scheduleTrigger",
+                      "typeVersion":  1.2,
+                      "position":  [
+                                       0,
+                                       0
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "method":  "GET",
+                                         "url":  "https://YOUR-PEEKRANK-HOST/CHANGELOG-ENDPOINT",
+                                         "authentication":  "genericCredentialType",
+                                         "genericAuthType":  "httpHeaderAuth",
+                                         "sendQuery":  true,
+                                         "queryParameters":  {
+                                                                 "parameters":  [
+                                                                                    {
+                                                                                        "name":  "since",
+                                                                                        "value":  "={{ $now.setZone(\u0027Europe/Madrid\u0027).startOf(\u0027week\u0027).minus({ weeks: 1 }).toISODate() }}"
+                                                                                    },
+                                                                                    {
+                                                                                        "name":  "until",
+                                                                                        "value":  "={{ $now.setZone(\u0027Europe/Madrid\u0027).startOf(\u0027week\u0027).toISODate() }}"
+                                                                                    }
+                                                                                ]
+                                                             },
+                                         "options":  {
+                                                         "response":  {
+                                                                          "response":  {
+                                                                                           "responseFormat":  "json"
+                                                                                       }
+                                                                      }
+                                                     }
+                                     },
+                      "id":  "a1f0c001-0002-4000-8000-000000000002",
+                      "name":  "Get changelog",
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.2,
+                      "position":  [
+                                       220,
+                                       0
+                                   ],
+                      "retryOnFail":  true,
+                      "maxTries":  3,
+                      "waitBetweenTries":  5000
+                  },
+                  {
+                      "parameters":  {
+                                         "conditions":  {
+                                                            "options":  {
+                                                                            "caseSensitive":  true,
+                                                                            "leftValue":  "",
+                                                                            "typeValidation":  "strict",
+                                                                            "version":  2
+                                                                        },
+                                                            "conditions":  [
+                                                                               {
+                                                                                   "id":  "c1",
+                                                                                   "leftValue":  "={{ $json.data.total.public }}",
+                                                                                   "rightValue":  0,
+                                                                                   "operator":  {
+                                                                                                    "type":  "number",
+                                                                                                    "operation":  "gt"
+                                                                                                }
+                                                                               }
+                                                                           ],
+                                                            "combinator":  "and"
+                                                        },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "a1f0c001-0003-4000-8000-000000000003",
+                      "name":  "Any public changes?",
+                      "type":  "n8n-nodes-base.if",
+                      "typeVersion":  2.2,
+                      "position":  [
+                                       440,
+                                       0
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "fieldToSplitOut":  "data.releases",
+                                         "include":  "noOtherFields",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "a1f0c001-0004-4000-8000-000000000004",
+                      "name":  "Split releases",
+                      "type":  "n8n-nodes-base.splitOut",
+                      "typeVersion":  1,
+                      "position":  [
+                                       660,
+                                       -100
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "fieldToSplitOut":  "changes",
+                                         "include":  "allOtherFields",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "a1f0c001-0005-4000-8000-000000000005",
+                      "name":  "Split changes",
+                      "type":  "n8n-nodes-base.splitOut",
+                      "typeVersion":  1,
+                      "position":  [
+                                       880,
+                                       -100
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "conditions":  {
+                                                            "options":  {
+                                                                            "caseSensitive":  true,
+                                                                            "leftValue":  "",
+                                                                            "typeValidation":  "strict",
+                                                                            "version":  2
+                                                                        },
+                                                            "conditions":  [
+                                                                               {
+                                                                                   "id":  "c2",
+                                                                                   "leftValue":  "={{ $json.changes.public }}",
+                                                                                   "rightValue":  "",
+                                                                                   "operator":  {
+                                                                                                    "type":  "boolean",
+                                                                                                    "operation":  "true",
+                                                                                                    "singleValue":  true
+                                                                                                }
+                                                                               }
+                                                                           ],
+                                                            "combinator":  "and"
+                                                        },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "a1f0c001-0006-4000-8000-000000000006",
+                      "name":  "Only public",
+                      "type":  "n8n-nodes-base.filter",
+                      "typeVersion":  2.2,
+                      "position":  [
+                                       1100,
+                                       -100
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "aggregate":  "aggregateAllItemData",
+                                         "destinationFieldName":  "cambios",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "a1f0c001-0007-4000-8000-000000000007",
+                      "name":  "Aggregate",
+                      "type":  "n8n-nodes-base.aggregate",
+                      "typeVersion":  1,
+                      "position":  [
+                                       1320,
+                                       -100
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const cambios = $input.first().json.cambios;\nconst datos = $(\u0027Get changelog\u0027).first().json.data;\n\n// Fecha en hora de Madrid, por ejemplo 16/11/2026\nconst dia = (ms) =\u003e new Intl.DateTimeFormat(\u0027es-ES\u0027, { timeZone: \u0027Europe/Madrid\u0027, day: \u00272-digit\u0027, month: \u00272-digit\u0027, year: \u0027numeric\u0027 }).format(new Date(ms));\n\n// until no entra en la semana: el último día es el de justo antes\nconst desde = dia(Date.parse(datos.since));\nconst hasta = dia(Date.parse(datos.until) - 1);\n\n// Agrupar los cambios por versión, en el orden en que llegan\nconst versiones = new Map();\nfor (const c of cambios) {\n  if (!versiones.has(c.version)) versiones.set(c.version, { fecha: dia(Date.parse(c.published_at)), lista: [] });\n  versiones.get(c.version).lista.push(c.changes);\n}\n\nconst bloques = [];\nfor (const [version, v] of versiones) {\n  const lineas = v.lista.map((x) =\u003e `- [${x.type_label}] ${x.title}\\n  ${x.text}`);\n  bloques.push(`Versión ${version} (${v.fecha})\\n\\n${lineas.join(\u0027\\n\\n\u0027)}`);\n}\n\nreturn [{ json: {\n  asunto: `Novedades de PeekRank: del ${desde} al ${hasta}`,\n  texto: bloques.join(\u0027\\n\\n----------\\n\\n\u0027),\n} }];"
+                                     },
+                      "id":  "a1f0c001-0008-4000-8000-000000000008",
+                      "name":  "Write email",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       1540,
+                                       -100
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "fromEmail":  "",
+                                         "toEmail":  "",
+                                         "subject":  "={{ $json.asunto }}",
+                                         "emailFormat":  "text",
+                                         "text":  "={{ $json.texto }}",
+                                         "options":  {
+                                                         "appendAttribution":  false
+                                                     }
+                                     },
+                      "id":  "a1f0c001-0009-4000-8000-000000000009",
+                      "name":  "Send email",
+                      "type":  "n8n-nodes-base.emailSend",
+                      "typeVersion":  2.1,
+                      "position":  [
+                                       1760,
+                                       -100
+                                   ]
+                  }
+              ],
+    "connections":  {
+                        "Every Wednesday 08:00":  {
+                                                      "main":  [
+                                                                   [
+                                                                       {
+                                                                           "node":  "Get changelog",
+                                                                           "type":  "main",
+                                                                           "index":  0
+                                                                       }
+                                                                   ]
+                                                               ]
+                                                  },
+                        "Get changelog":  {
+                                              "main":  [
+                                                           [
+                                                               {
+                                                                   "node":  "Any public changes?",
+                                                                   "type":  "main",
+                                                                   "index":  0
+                                                               }
+                                                           ]
+                                                       ]
+                                          },
+                        "Any public changes?":  {
+                                                    "main":  [
+                                                                 [
+                                                                     {
+                                                                         "node":  "Split releases",
+                                                                         "type":  "main",
+                                                                         "index":  0
+                                                                     }
+                                                                 ],
+                                                                 [
+
+                                                                 ]
+                                                             ]
+                                                },
+                        "Split releases":  {
+                                               "main":  [
+                                                            [
+                                                                {
+                                                                    "node":  "Split changes",
+                                                                    "type":  "main",
+                                                                    "index":  0
+                                                                }
+                                                            ]
+                                                        ]
+                                           },
+                        "Split changes":  {
+                                              "main":  [
+                                                           [
+                                                               {
+                                                                   "node":  "Only public",
+                                                                   "type":  "main",
+                                                                   "index":  0
+                                                               }
+                                                           ]
+                                                       ]
+                                          },
+                        "Only public":  {
+                                            "main":  [
+                                                         [
+                                                             {
+                                                                 "node":  "Aggregate",
+                                                                 "type":  "main",
+                                                                 "index":  0
+                                                             }
+                                                         ]
+                                                     ]
+                                        },
+                        "Aggregate":  {
+                                          "main":  [
+                                                       [
+                                                           {
+                                                               "node":  "Write email",
+                                                               "type":  "main",
+                                                               "index":  0
+                                                           }
+                                                       ]
+                                                   ]
+                                      },
+                        "Write email":  {
+                                            "main":  [
+                                                         [
+                                                             {
+                                                                 "node":  "Send email",
+                                                                 "type":  "main",
+                                                                 "index":  0
+                                                             }
+                                                         ]
+                                                     ]
+                                        }
+                    },
+    "settings":  {
+                     "executionOrder":  "v1",
+                     "timezone":  "Europe/Madrid"
+                 },
+    "active":  false
+}
